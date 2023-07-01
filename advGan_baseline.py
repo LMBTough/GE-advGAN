@@ -138,13 +138,6 @@ class AdvGAN_Attack:
         # initialize all weights
         self.netG.apply(weights_init)
         self.netDisc.apply(weights_init)
-
-        # initialize optimizers
-        # self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
-        #                                     lr=0.001)
-        # self.optimizer_D = torch.optim.Adam(self.netDisc.parameters(),
-        #                                     lr=0.001)
-        
         self.save_path = save_path
         self.adv_lambda=adv_lambda
         self.epochs=epochs
@@ -165,7 +158,7 @@ class AdvGAN_Attack:
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-# def train_batch(self, x, labels, [5, 10, 11], [[4, 0.001], 3, 2]):
+
     def train_batch(self, x, labels):
         # optimize D
         for i in range(self.d_ranges[self.idx]):
@@ -198,7 +191,6 @@ class AdvGAN_Attack:
             # calculate perturbation norm
             C = 0.1
             loss_perturb = torch.mean(torch.norm(perturbation.reshape(perturbation.shape[0], -1), 2, dim=1))
-            # loss_perturb = torch.max(loss_perturb - C, torch.zeros(1, device=self.device))
 
             # cal adv loss
             logits_model = self.model(adv_images)
@@ -222,10 +214,6 @@ class AdvGAN_Attack:
             squ_perturb = (((diff)**2).sum() / np.prod(adv_images.shape))
             abs_perturb = ((abs(diff)).sum() / np.prod(adv_images.shape))            
 
-            # maximize cross_entropy loss
-            # loss_adv = -F.mse_loss(logits_model, onehot_labels)
-            # loss_adv = - F.cross_entropy(logits_model, labels)
-
             adv_lambda = self.adv_lambda
             pert_lambda = self.pert_lambda
             loss_G = adv_lambda * loss_adv + pert_lambda * loss_perturb
@@ -242,18 +230,6 @@ class AdvGAN_Attack:
         epochs = self.epochs
         self.idx = 0
         for epoch in range(1, epochs+1):
-
-            # if epoch == 50:
-            #     self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
-            #                                         lr=0.0001)
-            #     self.optimizer_D = torch.optim.Adam(self.netDisc.parameters(),
-            #                                         lr=0.0001)
-            # if epoch == 80:
-            #     self.optimizer_G = torch.optim.Adam(self.netG.parameters(),
-            #                                         lr=0.00001)
-            #     self.optimizer_D = torch.optim.Adam(self.netDisc.parameters(),
-            #                                         lr=0.00001)
-            
             
             if epoch > self.change_thres[self.idx]:
                 if self.idx < len(self.change_thres) - 1:
@@ -302,8 +278,6 @@ class AdvGAN_Attack:
                 if not os.path.exists(self.save_path+ 'saved_model/'):
                     os.makedirs(self.save_path+ 'saved_model/')
                 netG_file_name = self.save_path + 'saved_model/netG_epoch_' + str(epoch) + '.pth'
-                # if not os.path.exists(netG_file_name):
-                #     os.makedirs(netG_file_name)
                 torch.save(self.netG.state_dict(), netG_file_name)
                 
             if epoch % 2 == 0:
@@ -322,8 +296,6 @@ class AdvGAN_Attack:
     
     def save_image(self,images,names,output_dir):
         """save the adversarial images"""
-        # if os.path.exists(output_dir)==False:
-        #     os.makedirs(output_dir)
 
         for i,name in enumerate(names):
             img = Image.fromarray(images[i].astype('uint8'))
